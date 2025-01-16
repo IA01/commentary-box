@@ -51,7 +51,9 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:3001",
         "https://*.vercel.app",
-        "https://commentary-*.vercel.app"
+        "https://commentary-box.vercel.app",
+        "https://commentary-*.vercel.app",
+        "https://*-ahluwaliaishan-yahoocoms-projects.vercel.app"  # This will match all preview deployments
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
