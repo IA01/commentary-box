@@ -23,7 +23,7 @@ except LookupError:
 load_dotenv()
 
 # Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI()
 
 app = FastAPI(title="Cricket Commentary Website Analyzer")
 
