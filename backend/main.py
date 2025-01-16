@@ -51,9 +51,9 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:3001",
         "https://commentary-box.vercel.app",  # Production URL
-        "https://commentary-box-git-main-ahluwaliaishan-yahoocoms-projects.vercel.app",  # Main branch preview
-        "https://commentary-box-ahluwaliaishan-yahoocoms-projects.vercel.app",  # Project preview
-        "https://commentary-35dpz86tq-ahluwaliaishan-yahoocoms-projects.vercel.app"  # Current preview deployment
+        "https://commentary-box-git-main-ahluwaliaishaan-yahoocoms-projects.vercel.app",  # Main branch preview
+        "https://commentary-box-ahluwaliaishaan-yahoocoms-projects.vercel.app",  # Project preview
+        "https://commentary-*-ahluwaliaishaan-yahoocoms-projects.vercel.app"  # All preview deployments
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
