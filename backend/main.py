@@ -14,11 +14,15 @@ import nltk
 from nltk.tokenize import sent_tokenize
 import httpx
 
-# Download required NLTK data
+# Download required NLTK data during startup
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
-    nltk.download('punkt', quiet=True)
+    try:
+        nltk.download('punkt', quiet=True)
+    except Exception as e:
+        print(f"Warning: Failed to download NLTK data: {str(e)}")
+        # Continue anyway as we have a fallback in get_important_sentences
 
 # Load environment variables
 load_dotenv()
@@ -26,7 +30,7 @@ load_dotenv()
 # Get API key but don't initialize client yet
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
-    raise ValueError("OPENAI_API_KEY environment variable is not set")
+    print("Warning: OPENAI_API_KEY environment variable is not set")
 
 def get_openai_client():
     """Create a new OpenAI client instance for each request"""
@@ -54,10 +58,10 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:3001",
-        "https://commentary-box.vercel.app",
-        "https://commentary-box-git-main-ahluwaliaishaan-yahoocoms-projects.vercel.app",
-        "https://commentary-box-ahluwaliaishaan-yahoocoms-projects.vercel.app",
-        f"https://commentary-{os.getenv('VERCEL_GIT_COMMIT_SHA', '*')}-ahluwaliaishaan-yahoocoms-projects.vercel.app"
+        "https://commentary-box.vercel.app",  # Production URL
+        "https://commentary-box-git-main-ahluwaliaishaan-yahoocoms-projects.vercel.app",  # Main branch preview
+        "https://commentary-box-ahluwaliaishaan-yahoocoms-projects.vercel.app",  # Project preview
+        "https://commentary-*-ahluwaliaishaan-yahoocoms-projects.vercel.app"  # All preview deployments
     ],
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
