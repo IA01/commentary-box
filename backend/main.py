@@ -42,7 +42,11 @@ def get_openai_client():
         print(f"Error initializing OpenAI client: {str(e)}")
         raise
 
-app = FastAPI(title="Cricket Commentary Website Analyzer")
+app = FastAPI(
+    title="Cricket Commentary Website Analyzer",
+    root_path="",
+    root_path_in_servers=True
+)
 
 # CORS configuration
 app.add_middleware(
@@ -57,7 +61,7 @@ app.add_middleware(
     ],
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type"],
+    allow_headers=["Content-Type", "Accept", "Authorization", "X-Requested-With"],
     max_age=86400,
 )
 
@@ -329,3 +333,8 @@ async def analyze_website(input: URLInput):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.get("/")
+async def root():
+    """Root endpoint to verify API is running"""
+    return {"status": "API is running"}
