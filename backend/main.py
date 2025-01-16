@@ -47,17 +47,11 @@ app = FastAPI(title="Cricket Commentary Website Analyzer")
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "https://commentary-box.vercel.app",  # Production URL
-        "https://commentary-box-git-main-ahluwaliaishaan-yahoocoms-projects.vercel.app",  # Main branch preview
-        "https://commentary-box-ahluwaliaishaan-yahoocoms-projects.vercel.app",  # Project preview
-        "https://commentary-*-ahluwaliaishaan-yahoocoms-projects.vercel.app"  # All preview deployments
-    ],
+    allow_origins=["*"],  # Allow all origins temporarily for debugging
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+    expose_headers=["*"],  # Expose all headers
     max_age=86400,  # Cache preflight requests for 24 hours
 )
 
@@ -329,8 +323,3 @@ async def analyze_website(input: URLInput):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-
-# Add OPTIONS endpoint explicitly
-@app.options("/analyze")
-async def analyze_options():
-    return {"status": "ok"}
