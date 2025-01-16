@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import validators
@@ -51,11 +51,12 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:3001",
         "https://*.vercel.app",
-        "https://commentary-20cw8mj6u-ahluwaliaishan-yahoocoms-projects.vercel.app"
+        "https://commentary-*.vercel.app"
     ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
+    max_age=86400,  # Cache preflight requests for 24 hours
 )
 
 class URLInput(BaseModel):
@@ -298,19 +299,36 @@ def generate_commentary(content: str, website_type: str, metadata: Dict[str, Any
         print(f"Error generating commentary: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating commentary: {str(e)}")
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"Incoming request: {request.method} {request.url}")
+    print(f"Headers: {request.headers}")
+    response = await call_next(request)
+    print(f"Response status: {response.status_code}")
+    return response
+
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze_website(input: URLInput):
+    print(f"Analyzing website: {input.url} with commentator: {input.commentator}")
     if not validators.url(input.url):
         raise HTTPException(status_code=400, detail="Invalid URL format")
     
     if input.commentator not in ["ravi", "harsha", "jatin"]:
         raise HTTPException(status_code=400, detail="Invalid commentator selection")
     
-    content, website_type, metadata = get_website_content(input.url)
-    commentary = generate_commentary(content, website_type, metadata, input.commentator)
-    
-    return AnalysisResponse(commentary=commentary, website_type=website_type)
+    try:
+        content, website_type, metadata = get_website_content(input.url)
+        commentary = generate_commentary(content, website_type, metadata, input.commentator)
+        return AnalysisResponse(commentary=commentary, website_type=website_type)
+    except Exception as e:
+        print(f"Error in analyze_website: {str(e)}")
+        raise
 
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+# Add OPTIONS endpoint explicitly
+@app.options("/analyze")
+async def analyze_options():
+    return {"status": "ok"}
