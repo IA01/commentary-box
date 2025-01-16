@@ -53,20 +53,22 @@ app = FastAPI(
 )
 
 # CORS configuration
+origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://commentary-box.vercel.app",
+    "https://commentary-box-git-main-ahluwaliaishaan-yahoocoms-projects.vercel.app",
+    "https://commentary-box-ahluwaliaishaan-yahoocoms-projects.vercel.app",
+    "https://commentary-21gwtu5bb-ahluwaliaishaan-yahoocoms-projects.vercel.app",  # Current preview
+    "https://*.vercel.app"  # Allow all Vercel preview deployments
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "https://commentary-box.vercel.app",
-        "https://commentary-box-git-main-ahluwaliaishaan-yahoocoms-projects.vercel.app",
-        "https://commentary-box-ahluwaliaishaan-yahoocoms-projects.vercel.app",
-        "https://commentary-*-ahluwaliaishaan-yahoocoms-projects.vercel.app"
-    ],
+    allow_origins=origins,
     allow_credentials=False,
-    allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
-    allow_headers=["*"],  # Allow all headers for simplicity
-    expose_headers=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
     max_age=86400,
 )
 
@@ -310,14 +312,10 @@ def generate_commentary(content: str, website_type: str, metadata: Dict[str, Any
         print(f"Error generating commentary: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating commentary: {str(e)}")
 
-@app.options("/analyze")
-async def analyze_options():
-    return {"status": "ok"}
-
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     print(f"Incoming request: {request.method} {request.url}")
-    print(f"Headers: {request.headers}")
+    print(f"Headers: {dict(request.headers)}")  # Convert headers to dict for better logging
     response = await call_next(request)
     print(f"Response status: {response.status_code}")
     return response
