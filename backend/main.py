@@ -12,6 +12,7 @@ import re
 import json
 import nltk
 from nltk.tokenize import sent_tokenize
+import httpx
 
 # Download required NLTK data
 try:
@@ -22,12 +23,24 @@ except LookupError:
 # Load environment variables
 load_dotenv()
 
-# Initialize OpenAI client with proper error handling
+# Get API key but don't initialize client yet
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     raise ValueError("OPENAI_API_KEY environment variable is not set")
 
-client = OpenAI(api_key=api_key)
+def get_openai_client():
+    """Create a new OpenAI client instance for each request"""
+    try:
+        return OpenAI(
+            api_key=api_key,
+            http_client=httpx.Client(
+                timeout=60.0,
+                follow_redirects=True
+            )
+        )
+    except Exception as e:
+        print(f"Error initializing OpenAI client: {str(e)}")
+        raise
 
 app = FastAPI(title="Cricket Commentary Website Analyzer")
 
@@ -257,6 +270,7 @@ def generate_commentary(content: str, website_type: str, metadata: Dict[str, Any
     }
 
     try:
+        client = get_openai_client()
         metadata_prompt = f"""
         Website Analysis:
         - Type: {website_type}
@@ -276,6 +290,7 @@ def generate_commentary(content: str, website_type: str, metadata: Dict[str, Any
         )
         return response.choices[0].message.content
     except Exception as e:
+        print(f"Error generating commentary: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating commentary: {str(e)}")
 
 @app.post("/analyze", response_model=AnalysisResponse)
