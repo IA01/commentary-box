@@ -58,14 +58,15 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:3001",
-        "https://commentary-box.vercel.app",  # Production URL
-        "https://commentary-box-git-main-ahluwaliaishaan-yahoocoms-projects.vercel.app",  # Main branch preview
-        "https://commentary-box-ahluwaliaishaan-yahoocoms-projects.vercel.app",  # Project preview
-        "https://commentary-*-ahluwaliaishaan-yahoocoms-projects.vercel.app"  # All preview deployments
+        "https://commentary-box.vercel.app",
+        "https://commentary-box-git-main-ahluwaliaishaan-yahoocoms-projects.vercel.app",
+        "https://commentary-box-ahluwaliaishaan-yahoocoms-projects.vercel.app",
+        "https://commentary-*-ahluwaliaishaan-yahoocoms-projects.vercel.app"
     ],
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Accept", "Authorization", "X-Requested-With"],
+    allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
+    allow_headers=["*"],  # Allow all headers for simplicity
+    expose_headers=["*"],
     max_age=86400,
 )
 
@@ -308,6 +309,10 @@ def generate_commentary(content: str, website_type: str, metadata: Dict[str, Any
     except Exception as e:
         print(f"Error generating commentary: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating commentary: {str(e)}")
+
+@app.options("/analyze")
+async def analyze_options():
+    return {"status": "ok"}
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
