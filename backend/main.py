@@ -47,12 +47,18 @@ app = FastAPI(title="Cricket Commentary Website Analyzer")
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins temporarily for debugging
-    allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
-    expose_headers=["*"],  # Expose all headers
-    max_age=86400,  # Cache preflight requests for 24 hours
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://commentary-box.vercel.app",
+        "https://commentary-box-git-main-ahluwaliaishaan-yahoocoms-projects.vercel.app",
+        "https://commentary-box-ahluwaliaishaan-yahoocoms-projects.vercel.app",
+        f"https://commentary-{os.getenv('VERCEL_GIT_COMMIT_SHA', '*')}-ahluwaliaishaan-yahoocoms-projects.vercel.app"
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
+    max_age=86400,
 )
 
 class URLInput(BaseModel):
