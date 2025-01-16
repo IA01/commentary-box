@@ -22,8 +22,15 @@ except LookupError:
 # Load environment variables
 load_dotenv()
 
-# Initialize OpenAI client
-client = OpenAI()
+# Initialize OpenAI client with proper error handling
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+client = OpenAI(
+    api_key=api_key,
+    base_url="https://api.openai.com/v1"
+)
 
 app = FastAPI(title="Cricket Commentary Website Analyzer")
 
