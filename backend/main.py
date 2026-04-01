@@ -5,14 +5,13 @@ import validators
 from typing import Optional, Dict, List, Any
 import os
 from dotenv import load_dotenv
-from openai import OpenAI
+import google.generativeai as genai
 import requests
 from bs4 import BeautifulSoup
 import re
 import json
 import nltk
 from nltk.tokenize import sent_tokenize
-import httpx
 
 # Download required NLTK data during startup
 try:
@@ -27,24 +26,11 @@ except LookupError:
 # Load environment variables
 load_dotenv()
 
-# Get API key but don't initialize client yet
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    print("Warning: OPENAI_API_KEY environment variable is not set")
-
-def get_openai_client():
-    """Create a new OpenAI client instance for each request"""
-    try:
-        return OpenAI(
-            api_key=api_key,
-            http_client=httpx.Client(
-                timeout=60.0,
-                follow_redirects=True
-            )
-        )
-    except Exception as e:
-        print(f"Error initializing OpenAI client: {str(e)}")
-        raise
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+if not gemini_api_key:
+    print("Warning: GEMINI_API_KEY environment variable is not set")
+else:
+    genai.configure(api_key=gemini_api_key)
 
 app = FastAPI(
     title="Cricket Commentary Website Analyzer",
@@ -289,7 +275,6 @@ def generate_commentary(content: str, website_type: str, metadata: Dict[str, Any
     }
 
     try:
-        client = get_openai_client()
         metadata_prompt = f"""
         Website Analysis:
         - Type: {website_type}
@@ -297,20 +282,22 @@ def generate_commentary(content: str, website_type: str, metadata: Dict[str, Any
         - Main Headings: {json.dumps(metadata['content']['headings'], indent=2)}
         - Content Samples: {json.dumps(metadata['content']['main_content'], indent=2)}
         """
-        
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": commentator_prompts[commentator]},
-                {"role": "user", "content": f"Analyze this website using the following information:\n\n{metadata_prompt}\n\nContent Sample:\n{content[:1500]}"}
-            ],
-            temperature=0.9 if commentator == "ravi" else 0.7,
-            max_tokens=5000
+
+        model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash",
+            system_instruction=commentator_prompts[commentator],
+            generation_config=genai.GenerationConfig(
+                temperature=0.9 if commentator == "ravi" else 0.7,
+                max_output_tokens=5000,
+            )
         )
-        return response.choices[0].message.content
+
+        user_message = f"Analyze this website using the following information:\n\n{metadata_prompt}\n\nContent Sample:\n{content[:4000]}"
+        response = model.generate_content(user_message)
+        return response.text
     except Exception as e:
-        print(f"Error generating commentary: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating commentary: {str(e)}")
+        print(f"Error generating commentary: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error generating commentary. Please try again.")
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
