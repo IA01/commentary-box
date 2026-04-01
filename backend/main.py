@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import validators
@@ -43,18 +43,18 @@ origins = [
     "http://localhost:3000",
     "http://localhost:3001",
     "https://commentary-box.vercel.app",
-    "https://commentary-box-git-main-ahluwaliaishaan-yahoocoms-projects.vercel.app",
+    "https://commentary-fuq8auvht-ahluwaliaishaan-yahoocoms-projects.vercel.app",
     "https://commentary-box-ahluwaliaishaan-yahoocoms-projects.vercel.app",
-    "https://commentary-21gwtu5bb-ahluwaliaishaan-yahoocoms-projects.vercel.app",  # Current preview
+    "https://commentary-21gwtu5bb-ahluwaliaishaan-yahoocoms-projects.vercel.app",
     "https://*.vercel.app"  # Allow all Vercel preview deployments
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],  # Allow all origins temporarily to debug
+    allow_credentials=False,  # Must be False when allow_origins=["*"]
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
     max_age=86400,
 )
 
