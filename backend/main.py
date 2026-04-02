@@ -6,6 +6,7 @@ from typing import Optional, Dict, List, Any
 import os
 from dotenv import load_dotenv
 import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -543,17 +544,38 @@ CONTENT SAMPLES (first meaningful paragraphs):
 FULL PAGE CONTENT (use this to find specific quotes, arguments, and details):
 {content[:6000]}"""
 
+        # Relax safety filters — the roast personas use aggressive language
+        # that default settings flag as harassment
+        safety_settings = {
+            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        }
+
         model = genai.GenerativeModel(
             model_name="gemini-2.5-flash",
             system_instruction=commentator_prompts[commentator],
             generation_config=genai.GenerationConfig(
                 temperature=0.9 if commentator == "ravi" else 0.7,
                 max_output_tokens=5000,
-            )
+            ),
+            safety_settings=safety_settings
         )
 
         response = model.generate_content(user_message)
-        return response.text
+
+        # Safe text extraction — response.text throws if parts are empty
+        if response.candidates and response.candidates[0].content.parts:
+            return ''.join(
+                part.text for part in response.candidates[0].content.parts
+                if hasattr(part, 'text')
+            )
+
+        # Fallback: log finish reason to help diagnose future blocks
+        finish_reason = response.candidates[0].finish_reason if response.candidates else "no candidates"
+        print(f"Empty response from model — finish_reason: {finish_reason}")
+        raise ValueError(f"Model returned empty response (finish_reason: {finish_reason})")
 
     except Exception as e:
         print(f"Error generating commentary: {type(e).__name__}: {str(e)}")
