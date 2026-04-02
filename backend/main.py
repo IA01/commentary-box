@@ -284,7 +284,7 @@ def generate_commentary(content: str, website_type: str, metadata: Dict[str, Any
         """
 
         model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
+            model_name="gemini-2.5-flash",
             system_instruction=commentator_prompts[commentator],
             generation_config=genai.GenerationConfig(
                 temperature=0.9 if commentator == "ravi" else 0.7,
